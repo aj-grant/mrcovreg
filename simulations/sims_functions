@@ -1,0 +1,125 @@
+data_sim = function(n, p, k, theta, g, bx, bw, bux, buw, buy, m){
+  k = dim(bw)[2]
+  ex = rnorm(n, 0, 1)
+  ey = rnorm(n, 0, 1)
+  SigW = diag(k)
+  ew = mvrnorm(n, rep(0, k), SigW)
+  U = rnorm(n, 0, 1)
+  G = sapply(1:p, function(x){rbinom(n, 2, m)})
+  X = G %*% bx + bux * U + ex
+  W = G %*% bw + U %*% t(buw) + ew
+  Y = X * theta + W %*% g + buy * U + ey
+  return(list("G" = G, "X" = X, "W" = W, "Y" = Y))
+}
+
+data_summarise = function(data_list, r2 = FALSE){
+  p = dim(data_list$G)[2]
+  k = dim(data_list$W)[2]
+  n = dim(data_list$G)[1]
+  bxhat = vector(length = p)
+  for (j in 1:p){
+    bxhat[j] = c(lm.fit(cbind(rep(1, n), data_list$G[,j]), data_list$X)$coefficients[2])
+  }
+  bwhat = matrix(nrow = p, ncol = k)
+  for (i in 1:p){
+    for (j in 1:k){
+      bwhat[i,j] = c(lm.fit(cbind(rep(1, n), data_list$G[,i]), data_list$W[,j])$coefficients[2])
+    }
+  }
+  byhat = vector(length = p)
+  seby = vector(length = p)
+  for (j in 1:p){
+    xx = cbind(rep(1, n), data_list$G[,j])
+    yg.lm = lm.fit(xx, data_list$Y)
+    byhat[j]= c(yg.lm$coefficients[2])
+    s = t(yg.lm$residuals) %*% (yg.lm$residuals) / (yg.lm$df.residual)
+    seby[j] = sqrt((c(s) * solve(t(xx) %*% xx))[2,2])
+  }
+  if (r2 == TRUE){
+    Xm = data_list$X - mean(data_list$X)
+    Gm = cbind(rep(1, n), data_list$G)
+    xgr2 = t(Xm) %*% Gm %*% solve(t(Gm) %*% Gm, t(Gm) %*% Xm) / (t(Xm) %*% Xm)
+    return(list("bxhat" = bxhat, "bwhat" = bwhat, "byhat" = byhat, "seby" = seby, "xgr2" = xgr2))
+  }
+  else {return(list("bxhat" = bxhat, "bwhat" = bwhat, "byhat" = byhat, "seby" = seby))}
+}
+
+thest = function(bx1, bw1, by1, seby1, bx2, bw2, by2, seby2, bx3, bw3, by3, seby3, v){
+  p = length(bx1)
+  k = dim(bw1)[2]
+  #IVW estimate
+  est_ivw = post_reg_est(bx1, bw1, by2, seby2, numeric(0))
+  #1 sample
+  t1 = mr_covreg(bx1, bw1, by1, diag(seby1^-2), cv_mt = 1)
+  cov_1s = which(t1$a!=0)
+  est_1s = post_reg_est(bx1, bw1, by1, seby1, cov_1s)
+  t12 = mr_covreg(bx1, bw1, by1, diag(seby1^-2), cv_mt = 2)
+  cov_1s2 = which(t12$a!=0)
+  est_1s2 = post_reg_est(bx1, bw1, by1, seby1, cov_1s2)
+  #2 sample
+  t2 = mr_covreg(bx1, bw1, by2, diag(seby2^-2), cv_mt = 1)
+  cov_2s = which(t2$a!=0)
+  est_2s = post_reg_est(bx1, bw1, by2, seby2, cov_2s)
+  t22 = mr_covreg(bx1, bw1, by2, diag(seby2^-2), cv_mt = 2)
+  cov_2s2 = which(t22$a!=0)
+  est_2s2 = post_reg_est(bx1, bw1, by2, seby2, cov_2s2)
+  #3 sample
+  t3 = mr_covreg(bx3, bw3, by3, diag(seby3^-2), cv_mt = 1)
+  cov_3s = which(t3$a!=0)
+  est_3s = post_reg_est(bx1, bw1, by2, seby2, cov_3s)
+  t32 = mr_covreg(bx3, bw3, by3, diag(seby3^-2), cv_mt = 2)
+  cov_3s2 = which(t32$a!=0)
+  est_3s2 = post_reg_est(bx1, bw1, by2, seby2, cov_3s2)
+  #Double selection
+  est_dbl = dbl_lasso(bx1, bw1, by2, diag(seby2^-2))
+  #MV All (if p > k)
+  if (p > k){
+    est_mvall = post_reg_est(bx1, bw1, by2, seby2, seq(1, k))
+  } else {
+    est_mvall = list("thest" = 0, "se" = 0)
+  }
+  #Oracle
+  cov_or = seq(1, k)[-v]
+  est_or = post_reg_est(bx1, bw1, by2, seby2, cov_or)
+  c(est_ivw$thest, est_ivw$se, t1$thest, length(cov_1s), est_1s$thest, est_1s2$se, t12$thest, length(cov_1s2), est_1s$thest, est_1s$se, t2$thest, length(cov_2s), est_2s$thest, est_2s$se, t22$thest, length(cov_2s2), est_2s2$thest, est_2s2$se, t3$thest, length(cov_3s), est_3s$thest, est_3s$se, t32$thest, length(cov_3s2), est_3s2$thest, est_3s2$se, est_dbl$thest, est_dbl$se, length(est_dbl$cov), est_mvall$thest, est_mvall$se, est_or$thest, est_or$se)  
+}
+
+post_reg_est = function(bx, bw, by, seby, cov){
+  p = length(bx)
+  S = diag(seby^-2)
+  if (length(cov) == 0) {
+    post_mod = mr_ivw(mr_input(bx = c(bx), bxse = rep(1, p), by = c(by), byse = seby))
+    t_post = post_mod$Estimate
+    se_post = post_mod$StdError
+    CILow = post_mod$CILower
+    CIUpp = post_mod$CIUpper
+  } else {
+    post_mod = mr_mvivw(mr_mvinput(bx = cbind(bx, bw[, cov]), bxse = sapply(1:(length(cov)+1), function(z){rep(1, p)}), by = c(by), byse = seby))
+    t_post = post_mod$Estimate[1]
+    se_post = post_mod$StdError[1]
+    CILow = post_mod$CILower[1]
+    CIUpp = post_mod$CIUpper[1]
+  }
+  return(list("thest" = t_post, "se" = se_post, "CILow" = CILow, "CIUpp" = CIUpp))
+}
+
+dbl_lasso = function(bx, bw, by, S){
+  p = length(bx)
+  k = dim(bw)[2]
+  bx = S^(1/2) %*% bx
+  bw = S^(1/2) %*% bw
+  by = S^(1/2) %*% by
+  m1 = cv.glmnet(bw, bx)
+  beta1 = m1$glmnet.fit$beta[,which(m1$lambda==m1$lambda.min)]
+  cov1 = which(beta1!=0)
+  m2 = cv.glmnet(bw, by)
+  beta2 = m2$glmnet.fit$beta[,which(m2$lambda==m2$lambda.min)]
+  cov2 = which(beta2!=0)
+  cov = union(cov1, cov2)
+  if (p > (length(cov)+1)){
+    est = post_reg_est(bx, bw, by, rep(1, p), cov)
+    return(list("thest" = est$thest, "se" = est$se, "cov" = cov))
+  } else {
+    return(list("thest" = 0, "se" = 0, "cov" = cov))
+  }
+}
