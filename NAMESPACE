@@ -1,2 +1,5 @@
 exportPattern("^[[:alpha:]]+")
 import(glmnet)
+importFrom(glmnet, glmnet)
+importFrom(glmnet, cv.glmnet)
+export(mr_covreg)
