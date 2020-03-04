@@ -8,6 +8,8 @@ Grant, A.J. and Burgess, S. (2019). An efficient and robust approach to Mendelia
 library(devtools)
 install_github("aj-grant/mvcovreg")
 ```
+## Applied example
+The file Urate_CHD_script.R in the R folder replicates the applied example in the paper.
 
 # Simulations
 The simulations folder contains R scripts to replicate the simulations presented in the paper.
