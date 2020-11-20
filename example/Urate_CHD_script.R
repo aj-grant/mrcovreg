@@ -12,7 +12,7 @@ install.packages("RColorBrewer")
 library(RColorBrewer)
 
 #Load genetic variant-risk factor associations
-x.data = read.csv('bx_associations.csv', header = TRUE)
+x.data = read.csv('example/bx_associations.csv', header = TRUE)
 
 #Load GWAS summary data from phenoscanner
 pheno_res = phenoscanner(snpquery = x.data$snp, pvalue = 1)
