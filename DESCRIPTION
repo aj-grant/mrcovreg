@@ -2,7 +2,7 @@ Package: mrcovreg
 Type: Package
 Title: Package for an efficient and robust approach to Mendelian randomization with measured pleiotropic effects
 Version: 1.0.0
-Author: Authors@R: person("Andrew", "Grant", email = "andrew.grant@mrc-bsu.cam.ac.uk", role = c("aut", "cre"))
+Authors@R: person("Andrew", "Grant", email = "andrew.grant@mrc-bsu.cam.ac.uk", role = c("aut", "cre"))
 Description: Implement a method for an efficient and robust approach to Mendelian randomization with measured
     pleiotropic effects in a high-dimensional setting.
 License: GPL-3
