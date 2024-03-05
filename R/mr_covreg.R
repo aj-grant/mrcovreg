@@ -160,7 +160,7 @@ cv.mr_covreg = function(bx, bw, by, S, lambda = numeric(0), nlam = 100, nfolds =
       c(hy, rep(0, (length(lamseq)-length(hy))))
     }
   })
-  f = rbind(rowMeans(h), apply(h, 1, sd) / sqrt(nfolds))
+  f = rbind(rowMeans(h), apply(h, 1, stats::sd) / sqrt(nfolds))
   s = which.min(f[1,])
   s1 = min(which(f[1,] <= f[1,s] + f[2,s]))
   fit = list(beta = alas$beta, df = alas$df)
