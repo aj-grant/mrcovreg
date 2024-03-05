@@ -10,7 +10,7 @@
 #'@param by Vector of estimates of the genetic variant-outcome associations.
 #'@param S Diagonal matrix where the jth diagonal entry is the inverse of the
 #'  variance of the jth genetic variant-outcome association estimate.
-#'@param kleesp Indicates whether the tuning parameter should be always
+#'@param klessp Indicates whether the tuning parameter should be always
 #'  sufficiently large such that there are always less than p - 1 covariates
 #'  with a non-zero coefficient.
 #'@param lambda Sequence of lambda values to be used in cross-validation. If not
