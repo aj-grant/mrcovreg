@@ -34,7 +34,7 @@
 #'  \item{lambda_1se}{Value of lambda chosen by cross-validation with the 1
 #'    standard error rule applied.}
 #'  \item{lamseq}{Sequence of lambda values used in cross-validation.}
-
+#' @export
 mr_covreg = function(bx, bw, by, S, klessp = TRUE, lambda = numeric(0), nlam = 100, K = 10, cv_mt = 2){
   p = length(bx)
   k = dim(bw)[2]
