@@ -10,7 +10,7 @@
 #'@param by Vector of estimates of the genetic variant-outcome associations.
 #'@param S Diagonal matrix where the jth diagonal entry is the inverse of the
 #'  variance of the jth genetic variant-outcome association estimate.
-#'@param kleesp Indicates whether the tuning parameter should be always
+#'@param klessp Indicates whether the tuning parameter should be always
 #'  sufficiently large such that there are always less than p - 1 covariates
 #'  with a non-zero coefficient.
 #'@param lambda Sequence of lambda values to be used in cross-validation. If not
@@ -34,7 +34,7 @@
 #'  \item{lambda_1se}{Value of lambda chosen by cross-validation with the 1
 #'    standard error rule applied.}
 #'  \item{lamseq}{Sequence of lambda values used in cross-validation.}
-
+#' @export
 mr_covreg = function(bx, bw, by, S, klessp = TRUE, lambda = numeric(0), nlam = 100, K = 10, cv_mt = 2){
   p = length(bx)
   k = dim(bw)[2]
@@ -160,7 +160,7 @@ cv.mr_covreg = function(bx, bw, by, S, lambda = numeric(0), nlam = 100, nfolds =
       c(hy, rep(0, (length(lamseq)-length(hy))))
     }
   })
-  f = rbind(rowMeans(h), apply(h, 1, sd) / sqrt(nfolds))
+  f = rbind(rowMeans(h), apply(h, 1, stats::sd) / sqrt(nfolds))
   s = which.min(f[1,])
   s1 = min(which(f[1,] <= f[1,s] + f[2,s]))
   fit = list(beta = alas$beta, df = alas$df)
